@@ -8,8 +8,9 @@ import java.util.List;
 public class Repository<T> extends ObjectPersistenceManager<T>{
     private String path;
 
-    public Repository(Class<T> objectType) {
+    public Repository(Class<T> objectType) throws EntityInitializationException {
         super(objectType);
+
         path = objectType.getSimpleName() + "Repository.txt";
     }
     private void init(){
@@ -157,6 +158,11 @@ public class Repository<T> extends ObjectPersistenceManager<T>{
 
 
         return objects;
+    }
+
+    public void printAll() throws FileNotFoundException {
+        List<T> objects = readAll();
+        objects.forEach(System.out::println);
     }
 
 //    public List<T> readAll() {

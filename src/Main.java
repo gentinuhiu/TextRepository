@@ -3,32 +3,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
-    public static void main(String[] args) throws FileNotFoundException {
-        BookRepository br = new BookRepository();
-        StudentRepository sr =  new StudentRepository();
-        Book book = new Book();
+    public static void main(String[] args) throws FileNotFoundException, EntityInitializationException {
+        StudentRepository studentRepository = new StudentRepository();
 
-//        book.title = "ANANAS";
-//        br.save(book);
-//        book.title = "BANANA";
-//        br.save(book);
-//        book.title = "COOKIES";
-//        br.save(book);
-
-
-        List<Book> books = br.readAll();
-        books.forEach(System.out::println);
-
-//        for(int i = 1; i <= 3; i++){
-//            Student student = new Student();
-//            student.name = "Name" + i;
-//            student.surname = "Surname" + i;
-//            student.average = i + i * 10;
-//            student.book = books.get(i - 1);
-//            student.numbers = List.of(1 * i, 2 * i, 3 * i);
-//            sr.save(student);
-//        }
-
-        sr.readAll().forEach(System.out::println);
+        Student student = new Student();
+        student.setName("NAME-2");
+        student.setGrades(List.of(9,9,9,9,9,9,9,9));
+        student.setSurname("SURNAME-9");
+        student.setAverages(List.of(1, 2, 3));
+//        Student student2 = new Student(456l, "4", new ArrayList<>());
+//
+        studentRepository.save(student);
+//        studentRepository.save(student2);
+//        studentRepository.readAll().forEach(System.out::println);
+        studentRepository.printAll();
     }
 }
+

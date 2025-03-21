@@ -18,20 +18,6 @@ public class ObjectPersistenceManager<T> {
                 throw new EntityInitializationException("The first attribute is NOT of type Long.");
             }
 
-//            boolean foundList = false;
-//
-//            for (int i = 1; i < fields.length; i++) {
-//                Field field = fields[i];
-//
-//                boolean isCollection = Collection.class.isAssignableFrom(field.getType());
-//
-//                if (isCollection) {
-//                    foundList = true;
-//                } else if (foundList) {
-//                    throw new EntityInitializationException("Single-object attributes must be declared before lists.");
-//                }
-//            }
-
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
@@ -39,6 +25,7 @@ public class ObjectPersistenceManager<T> {
 
         this.objectType = objectType;
     }
+
 
     public Long firstAttributeValue(T obj) {
         Class<?> clazz = obj.getClass(); // Get the class of the object
@@ -174,54 +161,105 @@ public class ObjectPersistenceManager<T> {
 //        sb.append("\n");
 //        return sb.toString();
 //    }
-protected String objectToString(T object, boolean enterId, Long id) {
-    StringBuilder sb = new StringBuilder("***");
-    boolean setId = true;
-    StringBuilder listSb = new StringBuilder(); // Separate StringBuilder for list attributes
+//protected String objectToString(T object, boolean enterId, Long id) {
+//    StringBuilder sb = new StringBuilder("***");
+//    boolean setId = true;
+//    StringBuilder listSb = new StringBuilder(); // Separate StringBuilder for list attributes
+//
+//    try {
+//        Field[] fields = object.getClass().getDeclaredFields();
+//        for (Field field : fields) {
+//            field.setAccessible(true);
+//            Object value = field.get(object);
+//
+//            if (enterId && setId) {
+//                sb.append(",").append(id);
+//                setId = false;
+//                continue;
+//            }
+//
+//            if (value instanceof List<?>) {
+//                List<?> list = (List<?>) value;
+//                listSb.append("\n"); // New line for list
+//
+//                if (list == null) { // ✅ If list is null, print "null"
+//                    listSb.append("null");
+//                } else if (list.isEmpty()) {
+//                    listSb.append("<empty>");
+//                } else {
+//                    if (isPrimitiveList(list)) {
+//                        listSb.append(list.stream().map(String::valueOf).collect(Collectors.joining(",")));
+//                    } else {
+//                        listSb.append(list.stream()
+//                                .map(this::getFirstAttribute)
+//                                .collect(Collectors.joining(",")));
+//                    }
+//                }
+//            } else if (isCustomObject(value)) {
+//                sb.append(",").append(getFirstAttribute(value));
+//            } else {
+//                sb.append(",").append(value == null ? "null" : value); // ✅ Handles simpler attributes
+//            }
+//        }
+//    } catch (IllegalAccessException e) {
+//        return "Error in objectToString(): " + e.getMessage();
+//    }
+//
+//    sb.append(listSb).append("\n"); // Append the list elements after the first line
+//    return sb.toString();
+//}
 
-    try {
-        Field[] fields = object.getClass().getDeclaredFields();
-        for (Field field : fields) {
-            field.setAccessible(true);
-            Object value = field.get(object);
+    protected String objectToString(T object, boolean enterId, Long id) {
+        StringBuilder sb = new StringBuilder("***");
+        boolean setId = true;
+        StringBuilder listSb = new StringBuilder(); // Separate StringBuilder for list attributes
 
-            if (enterId && setId) {
-                sb.append(",").append(id);
-                setId = false;
-                continue;
-            }
+        try {
+            Field[] fields = object.getClass().getDeclaredFields();
+            for (Field field : fields) {
+                field.setAccessible(true);
+                Object value = field.get(object);
 
-            if (value instanceof List<?>) {
-                List<?> list = (List<?>) value;
-                listSb.append("\n"); // New line for list
-
-                if (list.isEmpty()) {
-                    listSb.append("<empty>");
-                } else {
-                    // If the list contains primitive types, convert them directly
-                    if (isPrimitiveList(list)) {
-                        listSb.append(list.stream().map(String::valueOf).collect(Collectors.joining(",")));
-                    } else {
-                        // Extract the first attribute of each object in the list
-                        listSb.append(list.stream()
-                                .map(this::getFirstAttribute)
-                                .collect(Collectors.joining(",")));
-                    }
+                if (enterId && setId) {
+                    sb.append(",").append(id);
+                    setId = false;
+                    continue;
                 }
-            } else if (isCustomObject(value)) {
-                // If it's a custom object, get its first attribute
-                sb.append(",").append(getFirstAttribute(value));
-            } else {
-                sb.append(",").append(value); // Append normal single-value attributes
+
+                // ✅ Instead of checking `value instanceof List<?>`, check the field type itself
+                if (List.class.isAssignableFrom(field.getType())) {
+                    listSb.append("\n"); // New line for lists
+
+                    if (value == null) {
+                        listSb.append("null"); // ✅ Print "null" for null lists
+                    } else {
+                        List<?> list = (List<?>) value;
+                        if (list.isEmpty()) {
+                            listSb.append("<empty>");
+                        } else {
+                            if (isPrimitiveList(list)) {
+                                listSb.append(list.stream().map(String::valueOf).collect(Collectors.joining(",")));
+                            } else {
+                                listSb.append(list.stream()
+                                        .map(this::getFirstAttribute)
+                                        .collect(Collectors.joining(",")));
+                            }
+                        }
+                    }
+                } else if (isCustomObject(value)) {
+                    sb.append(",").append(getFirstAttribute(value));
+                } else {
+                    sb.append(",").append(value == null ? "null" : value); // ✅ Handles simple attributes properly
+                }
             }
+        } catch (IllegalAccessException e) {
+            return "Error in objectToString(): " + e.getMessage();
         }
-    } catch (IllegalAccessException e) {
-        return "Error in objectToString(): " + e.getMessage();
+
+        sb.append(listSb).append("\n"); // Append the list elements after the first line
+        return sb.toString();
     }
 
-    sb.append(listSb).append("\n"); // Append the list elements after the first line
-    return sb.toString();
-}
     private String getFirstAttribute(Object obj) {
         if (obj == null) return "null";
 
